@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ band.name }} Albums - Music Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .points-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2em;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .albums-container {
+            margin-top: 50px;
+        }
+        .album-item {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .album-item:hover {
+            background-color: #f8f9fa;
+        }
+        .back-button {
+            margin: 20px 0;
+        }
+        .album-info {
+            flex-grow: 1;
+        }
+        .buy-button {
+            margin-left: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="points-display">
+            Your Points: {{ current_user.points }}
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% if category == 'error' %}
+                        {% set alert_class = 'danger' %}
+                    {% elif category == 'message' %}
+                        {% set alert_class = 'secondary' %}
+                    {% else %}
+                        {% set alert_class = category %}
+                    {% endif %}
+                    <div class="alert alert-{{ alert_class }} mt-3" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1 class="text-center mt-4">{{ band.name }} Albums</h1>
+
+        <div class="albums-container">
+            {% if albums %}
+                {% for album in albums %}
+                <div class="album-item">
+                    <div class="album-info">
+                        <h4>{{ album.name }}</h4>
+                        <p class="text-muted mb-0">Price: {{ album.price }} points</p>
+                    </div>
+                    <div class="buy-button">
+                        {% if current_user.points >= album.price %}
+                            <form action="{{ url_for('purchase_album', album_id=album.id) }}" method="POST">
+                                <button type="submit" class="btn btn-primary">Buy Album</button>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-secondary" disabled title="Not enough points">Buy Album</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-muted">No albums available right now.</p>
+            {% endif %}
+        </div>
+
+        <div class="back-button">
+            <a href="{{ url_for('home') }}" class="btn btn-primary me-2">Home</a>
+            <a href="{{ url_for('store') }}" class="btn btn-secondary">Back to Bands</a>
+        </div>
+    </div>
+</body>
+</html>

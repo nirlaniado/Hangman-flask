@@ -75,6 +75,9 @@ class musicstore():
     def get_albums_by_band(self, band_id: int):
         return [a for a in self.get_albums() if getattr(a, "band_id", None) == band_id]
 
+    def validate_purchase(self, price, user_points):
+        return user_points >= price
+
 
 def build_store():
     
