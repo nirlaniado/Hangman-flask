@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Hangman{% endblock %}
+
+{% block flash_messages %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">Hangman Challenge</h2>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <pre class="hangman-art mb-0">{{ hangman_art }}</pre>
+                </div>
+
+                <p class="fs-3 text-center letter-spacing fw-semibold">{{ word_display }}</p>
+
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <strong>Status:</strong>
+                        <span class="text-uppercase">{{ status }}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Misses:</strong>
+                        {{ misses }} / {{ max_tries }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Guessed letters:</strong>
+                        {% set guesses = session.get("guesses", []) %}
+                        {% if guesses %}
+                            {{ guesses | join(", ") }}
+                        {% else %}
+                            None yet
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if status == "playing" %}
+                    <form method="post" action="{{ url_for('hangman') }}" class="row g-3 justify-content-center align-items-end">
+                        <div class="col-sm-6">
+                            <label for="guess" class="form-label">Guess a letter</label>
+                            <input type="text"
+                                   class="form-control text-center"
+                                   id="guess"
+                                   name="guess"
+                                   maxlength="1"
+                                   pattern="[a-z]"
+                                   oninput="this.value = this.value.toLowerCase()"
+                                   required>
+                        </div>
+                        <div class="col-sm-4">
+                            <button type="submit" class="btn btn-success w-100">Submit Guess</button>
+                        </div>
+                    </form>
+                {% else %}
+                    {% if status == "won" %}
+                        <p class="text-success text-center fs-5 mb-3">Congratulations you won 10 points!!! Would you like to play again?</p>
+                    {% elif status == "lost" %}
+                        <p class="text-danger text-center fs-5 mb-3">Tough break! Want to try again?</p>
+                    {% else %}
+                        <p class="text-info text-center fs-5 mb-3">Game over! Use the button below to start a new round.</p>
+                    {% endif %}
+                    <a class="btn btn-primary" href="{{ url_for('reset_hangman') }}">Play Again</a>
+                {% endif %}
+
+                {% if flash_messages %}
+                    <div class="mt-4">
+                        {% for category, message in flash_messages %}
+                            <div class="alert alert-{{ category if category else 'info' }} text-center fs-5 py-3 mb-2">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <a class="btn btn-outline-secondary" href="{{ url_for('reset_hangman') }}">Reset Game</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hangman-art {
+        font-family: "Courier New", Courier, monospace;
+        white-space: pre-wrap;
+    }
+
+    .letter-spacing {
+        letter-spacing: 0.35rem;
+    }
+</style>
+{% endblock %}

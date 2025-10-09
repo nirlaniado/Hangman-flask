@@ -1,10 +1,23 @@
-from flask import Flask, render_template, flash, redirect, url_for, abort
+from flask import Flask, render_template, flash, redirect, url_for, abort, session, request, get_flashed_messages
 from flask_login import LoginManager, login_required, current_user
 from models import db, User, bcrypt
 from auth import auth  
 from store import build_store
+from hangman import (
+    random,
+    load_words,
+    random_word,
+    show_hidden_word,
+    is_guess_valid,
+    HANGMAN_ASCII_ART,
+    HANGMAN_PHOTOS,
+    hint,
+)
+
 
 app = Flask(__name__)
+
+load_words("musicians_clues.txt")
 
 app.config['SECRET_KEY'] = 'something_secret_here'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///music_shop.db'
@@ -18,7 +31,7 @@ login_manager.login_view = "auth.login"
 app.register_blueprint(auth)
 bcrypt.init_app(app)
 
-store_instance = build_store()  # Create a single instance
+store_instance = build_store()  
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -33,15 +46,84 @@ def welcome():
 def home():
     return render_template("home.html")
 
-@app.route("/hangman")
+@app.route("/hangman", methods=["GET", "POST"])
 @login_required
 def hangman():
-    pass
+    session.setdefault("guesses", [])
+    session.setdefault("misses", 0)
+    session["max_tries"] = 6
+    session.setdefault("status", "playing")
+    session.setdefault("awarded", False)
+    if "word" not in session:
+        session["word"] = random_word().lower().strip()
+
+    if request.method == "POST" and session["status"] == "playing":
+        guess = request.form.get("guess", "").strip().lower()
+
+        if session['misses'] > 3 :
+                clue = hint(session['word'], session['misses'])
+                if clue:
+                    flash(f"Hint: {clue.strip()}")
+             
+    
+        if not guess:
+                flash("Please enter a guess before submitting.")
+                return redirect(url_for('hangman'))
+
+        if not is_guess_valid(guess):
+                flash("Invalid guess. Please enter a single alphabetical character that you haven't guessed before.")
+                return redirect(url_for('hangman'))
+        if guess in session["guesses"]:
+                flash(f"You already guessed '{guess}'. Try a different letter.")
+                return redirect(url_for('hangman'))
+        
+        if guess in session["word"]:
+                flash(f"Good guess! '{guess}' is in the word.")
+                session["guesses"].append(guess)
+                if all(ch == " " or ch in session["guesses"] for ch in session["word"]):
+                    session["status"] = "won"
+                    if session["awarded"] == False:
+                        current_user.points += 10
+                        db.session.commit()
+                        session["awarded"] = True
+                   
+        else:
+                flash(f"Sorry, '{guess}' is not in the word.")
+                session["misses"] += 1
+                session["guesses"].append(guess)
+                if session["misses"] >= session["max_tries"]:
+                    session["status"] = "lost"
+                    flash(f"You've run out of tries. The word was '{session['word']}'. Better luck next time!")
+    word_display = show_hidden_word(session["word"], session["guesses"]) 
+    stage_key = min(session["misses"] + 1, max(HANGMAN_PHOTOS.keys()))
+    hangman_art = HANGMAN_PHOTOS.get(stage_key, "")
+
+    flash_messages = get_flashed_messages(with_categories=True)
+
+    return render_template(
+        "hangman.html",
+        hangman_art=hangman_art,
+        word_display=word_display,
+        max_tries=session["max_tries"],
+        misses=session["misses"],
+        status=session["status"],
+        flash_messages=flash_messages,
+    )        
+
+@app.route("/reset_hangman")
+@login_required
+def reset_hangman():
+    session.pop("word", None)
+    session.pop("guesses", None)
+    session.pop("misses", None)
+    session.pop("status", None)
+    session.pop("awarded", None)
+    return redirect(url_for('hangman'))
 
 @app.route("/store")
 @login_required
 def store():
-    bands = store_instance.get_bands()  # Use store_instance instead of store
+    bands = store_instance.get_bands() 
     return render_template("bands.html", bands=bands)
 
 @app.route("/owned-albums")
@@ -67,11 +149,11 @@ def band_albums(band_id):
 def purchase_album(album_id):
     album = store_instance.get_album_by_id(album_id)
     if album is None or not album.availible:
-        flash('Album is not available.', 'error')
+        flash('Album is not available.')
         return redirect(url_for('store'))
 
     if not store_instance.validate_purchase(album.price, current_user.points):
-        flash('Not enough points to purchase this album.', 'error')
+        flash('Not enough points to purchase this album.')
         return redirect(url_for('band_albums', band_id=album.band_id))
 
     current_user.points -= album.price

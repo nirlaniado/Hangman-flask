@@ -108,9 +108,12 @@ def print_hangman(num_of_tries):
     print(HANGMAN_PHOTOS[num_of_tries])
 
 def hint(word, num_of_tries):
+    """Return a textual hint once the player has missed enough times."""
     global word_dict
-    if num_of_tries == 4:
-        print(f"here is a hint for you: {word_dict[word]}")
+    clue = word_dict.get(word, "")
+    if num_of_tries >= 4:
+        return clue
+    return ""
 
 def is_guess_valid(guess):
     return len(guess) == 1 and guess.isalpha()
