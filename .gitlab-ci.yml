@@ -39,6 +39,7 @@ variables:
 before_script:
   - docker login -u $docker_user -p $docker_pass
 script:
-  - docker build -t
-  - docker push 
+  - docker build -t $image_name:$image_tag .
+  - docker push   $image_name:$image_tag
+
 
