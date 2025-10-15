@@ -16,7 +16,7 @@ lint:
   image: python:3.11-slim
   stage: lint 
   before_script:
-    pip install ruff
+      - pip install ruff
   script:
       - ruff check .
 
@@ -29,17 +29,16 @@ run_tests:
     - python -m unittest discover -s tests
 
 build_image:
-image: docker:29.0.0-rc.1-cli
-services:
-  - docker:20.10.16-dind
-stage: build
-variables:
-  DOCKER_TLS_CERTDIR: "/certs"
+  image: docker:29.0.0-rc.1-cli
+  services:
+    - docker:20.10.16-dind
+  stage: build
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
 
 before_script:
   - docker login -u $docker_user -p $docker_pass
 script:
-  - docker build -t $image_name:$image_tag .
-  - docker push   $image_name:$image_tag
-
+  - docker build -t
+  - docker push 
 
