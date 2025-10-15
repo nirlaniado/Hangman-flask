@@ -36,9 +36,9 @@ build_image:
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
 
-before_script:
-  - docker login -u $docker_user -p $docker_pass
-script:
-  - docker build -t
-  - docker push 
+  before_script:
+    - docker login -u $docker_user -p $docker_pass
+  script:
+    - docker build -t
+    - docker push 
 
