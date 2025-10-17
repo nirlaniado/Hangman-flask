@@ -1,28 +1,27 @@
 stages:
   - lint
   - test
-  - build 
-
+  - build
 
 variables:
-  image_name: flask-music-app
+  image_name: flask_app                
   image_tag: python-app-1.0
 
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
-    
+
 lint:
   image: python:3.11-slim
-  stage: lint 
+  stage: lint
   before_script:
-      - pip install ruff
+    - pip install ruff
   script:
-      - ruff check .
+    - ruff check .
 
-run_tests: 
-  image: python:3.11-slim 
+run_tests:
+  image: python:3.11-slim
   stage: test
   before_script:
     - pip install --upgrade pip
@@ -31,17 +30,18 @@ run_tests:
     - python -m unittest discover -s tests
 
 build_image:
-  image: docker:29.0.0-rc.1-cli
-  services:
-    - docker:29.0.0-rc.1-dind
   stage: build
+  image: docker:26
+  services:
+    - docker:26-dind
   variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   before_script:
-    - docker login -u $docker_user -p $docker_pass
-
+    - echo "$docker_pass" | docker login -u "$docker_user" --password-stdin docker.io
   script:
-    - docker build -t $image_name:$image_tag .
-    - docker push  $image_name:$image_tag
-
+    - docker build -t "$docker_user/$image_name:$CI_COMMIT_SHORT_SHA" -t "$docker_user/$image_name:$image_tag" .
+    - docker push "$docker_user/$image_name:$CI_COMMIT_SHORT_SHA"
+    - if [ "$CI_COMMIT_BRANCH" = "main" ]; then docker push "$docker_user/$image_name:$image_tag"; fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
