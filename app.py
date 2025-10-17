@@ -2,14 +2,13 @@ from flask import Flask, render_template, flash, redirect, url_for, abort, sessi
 from flask_login import LoginManager, login_required, current_user
 from models import db, User, bcrypt
 from auth import auth  
+import os
 from store import build_store
 from hangman import (
-    random,
     load_words,
     random_word,
     show_hidden_word,
     is_guess_valid,
-    HANGMAN_ASCII_ART,
     HANGMAN_PHOTOS,
     hint,
 )
@@ -19,7 +18,7 @@ app = Flask(__name__)
 
 load_words("musicians_clues.txt")
 
-app.config['SECRET_KEY'] = 'something_secret_here'
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "fallback_key")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///music_shop.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -82,7 +81,7 @@ def hangman():
                 session["guesses"].append(guess)
                 if all(ch == " " or ch in session["guesses"] for ch in session["word"]):
                     session["status"] = "won"
-                    if session["awarded"] == False:
+                    if not session["awarded"]:
                         current_user.points += 10
                         db.session.commit()
                         session["awarded"] = True
@@ -169,4 +168,4 @@ def init_db():
     print('Database initialized!')
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(host="0.0.0.0", debug=True, port=5000)

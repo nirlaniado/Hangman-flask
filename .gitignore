@@ -10,3 +10,5 @@ venv/
 ENV/
 instance/
 README.txt
+.gitignore
+.ruff_cache/
