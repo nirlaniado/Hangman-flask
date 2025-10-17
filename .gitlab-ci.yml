@@ -3,6 +3,7 @@ stages:
   - test
   - build 
 
+
 variables:
   image_name: flask-music-app
   image_tag: python-app-1.0
