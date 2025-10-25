@@ -1,4 +1,4 @@
-# store.py
+
 class MusicDegree:
     def __init__(self, item_id, name):
         self.id = item_id
