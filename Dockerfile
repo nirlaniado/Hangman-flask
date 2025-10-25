@@ -11,4 +11,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]   
+CMD bash -c "flask --app app.py init-db && python app.py"
