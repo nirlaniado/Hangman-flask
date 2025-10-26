@@ -19,7 +19,13 @@ app = Flask(__name__)
 load_words("musicians_clues.txt")
 
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "fallback_key")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    # Fall back to a local SQLite database when no external DB URL is provided
+    database_url = "sqlite:///app.db"
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
