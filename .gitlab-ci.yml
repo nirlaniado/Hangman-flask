@@ -52,5 +52,5 @@ deploy_to_render:
     - curl -fsSL -X POST "$RENDER_DEPLOY_HOOK_URL"
     rules:
     - if: $CI_COMMIT_BRANCH == "main"
-    - on success
+    when: on_success
     
