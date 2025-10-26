@@ -2,6 +2,7 @@ stages:
   - lint
   - test
   - build
+  - deploy
 
 variables:
   image_name: flask_app                
@@ -40,3 +41,16 @@ build_image:
   script:
     - docker build -t "$docker_user/$image_name:$CI_COMMIT_SHORT_SHA" -t "$docker_user/$image_name:$image_tag" .
     - docker push "$docker_user/$image_name:$CI_COMMIT_SHORT_SHA"
+
+deploy_to_render:
+    stage: deploy
+    image: alpine:3.20
+    needs: ["build_image"]
+    before_script:
+    - apt add --no-cache curl
+    script:
+    - curl -fsSL -X POST "$RENDER_DEPLOY_HOOK_URL"
+    rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - on success
+    
