@@ -1,8 +1,11 @@
+import logging
+import os
+
 from flask import Flask, render_template, flash, redirect, url_for, abort, session, request, get_flashed_messages
 from flask_login import LoginManager, login_required, current_user
+
 from models import db, User, bcrypt
-from auth import auth  
-import os
+from auth import auth
 from store import build_store
 from hangman import (
     load_words,
@@ -19,7 +22,15 @@ app = Flask(__name__)
 load_words("musicians_clues.txt")
 
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "fallback_key")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///music_shop.db'
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    logging.warning("DATABASE_URL not set; using SQLite fallback database.")
+    database_url = "sqlite:///app.db"
+else:
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    logging.info("Using SQLAlchemy database backend: %s", database_url.split("://", 1)[0])
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
