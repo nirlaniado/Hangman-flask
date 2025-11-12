@@ -11,4 +11,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD bash -c "flask --app app.py init-db && python app.py"
+CMD ["bash", "-c", "echo 'this image was created by nir' && flask --app app.py init-db && python app.py"]
