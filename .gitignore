@@ -12,3 +12,4 @@ instance/
 README.txt
 .gitignore
 .ruff_cache/
+actions-runner/

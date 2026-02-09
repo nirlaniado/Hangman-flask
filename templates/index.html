@@ -1,11 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Music Shop Home</title>
 </head>
+
 <body>
     <h1>Welcome to Music Shop! this image was created by nir </h1>
     <p><a href="{{ url_for('auth.login') }}">Login</a> | <a href="{{ url_for('auth.register') }}">Register</a></p>
+
+    <div style="margin-top: 20px;">
+        <h3>Background Music</h3>
+        <audio id="bgMusic" loop>
+            <source src="{{ url_for('static', filename='audio/Classical Study Music  30 Min Pomodoro.mp3') }}"
+                type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <button onclick="document.getElementById('bgMusic').play()">Play Music</button>
+        <button onclick="document.getElementById('bgMusic').pause()">Pause</button>
+        <br>
+        <label for="volume">Volume:</label>
+        <input type="range" id="volume" name="volume" min="0" max="1" step="0.1" value="0.5"
+            onchange="document.getElementById('bgMusic').volume = this.value">
+    </div>
+
+    <script>
+        // Attempt autoplay (likely to be blocked by browser without interaction)
+        window.addEventListener('load', function () {
+            var audio = document.getElementById('bgMusic');
+            audio.volume = 0.5;
+            var playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    console.log("Autoplay started!");
+                }).catch(error => {
+                    console.log("Autoplay prevented. User interaction required.");
+                });
+            }
+        });
+    </script>
 </body>
+
 </html>
